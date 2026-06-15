@@ -71,7 +71,7 @@ extern const char PASSWORD[] = "your_wifi_password";
 // #define DISPLAY_ST7789
 
 // Uncomment to enable the ST7735 128x128 LCD on the Spotpear ESP32-C3 1.44" "Mini TV" board.
-// Pins are fixed in hardware and are configured via TFT_eSPI (see ST7735_setup.h in this folder).
+// Pins are fixed in hardware and are configured via TFT_eSPI (see ST7735_setup.h).
 // Board GPIO map (from the board's schematic / HomeDing board definition):
 //   SCLK=GPIO3  MOSI/SDA=GPIO4  CS=GPIO2  DC/RS=GPIO0  RST=GPIO5  Backlight=GPIO11 (always on)
 #define DISPLAY_ST7735

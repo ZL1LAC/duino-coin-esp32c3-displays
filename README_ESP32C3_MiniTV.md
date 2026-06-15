@@ -1,6 +1,6 @@
 # Duino-Coin on the Spotpear ESP32-C3 1.44" "Mini TV" (ST7735)
 
-This folder is the official Duino-Coin `ESP_Code` firmware, set up to mine on the
+This repo is the official Duino-Coin `ESP_Code` firmware, set up to mine on the
 **Spotpear ESP32-C3 1.44-inch LCD** board and show live mining stats on the
 128×128 ST7735 screen.
 
@@ -61,7 +61,7 @@ Pick **one** method.
    - macOS: `~/Documents/Arduino/libraries/TFT_eSPI/`
 2. Open **`User_Setup.h`** in that folder.
 3. Delete (or comment out) its entire contents and **paste in the contents of
-   `ST7735_setup.h`** from this folder. Save.
+   `ST7735_setup.h`** from the repo root. Save.
 
 That's it — TFT_eSPI now uses GPIO3/4/2/0/5 for this board.
 
@@ -70,7 +70,7 @@ That's it — TFT_eSPI now uses GPIO3/4/2/0/5 for this board.
 
 ### Method B — add it as a selectable setup
 
-1. Copy `ST7735_setup.h` from this folder into the TFT_eSPI library folder
+1. Copy `ST7735_setup.h` from the repo root into the TFT_eSPI library folder
    (next to `User_Setup.h`), renamed to e.g.
    `User_Setups/Setup_Spotpear_C3_144.h`.
 2. Open **`User_Setup_Select.h`** in the TFT_eSPI folder.
@@ -107,7 +107,7 @@ Open the **Tools** menu and set (values from the board's documentation):
 
 ## 5. Open, compile, upload
 
-1. Open **`ESP_Code.ino`** in this folder (the IDE will open the whole sketch,
+1. Open **`ESP_Code.ino`** in the repo root (the IDE will open the whole sketch,
    including `Settings.h`, `DisplayHal.h`, etc. as tabs).
 2. Plug the board in via USB.
 3. Click **Upload** (the → arrow).

@@ -8,7 +8,7 @@ Based on Duino-Coin **ESP_Code 4.3**.
 
 ## What's new in this repo
 
-### Firmware (`ESP_Code/`)
+### Firmware (repo root)
 
 | File | Change |
 |------|--------|
@@ -37,10 +37,10 @@ Based on Duino-Coin **ESP_Code 4.3**.
 ## Quick start
 
 1. Clone this repo.
-2. Copy `ESP_Code/Settings.h.example` → `ESP_Code/Settings.h` and set your Duino-Coin username, WiFi, etc.
-3. Follow **`ESP_Code/README_ESP32C3_MiniTV.md`** for Arduino IDE, libraries, and TFT_eSPI setup.
+2. Copy `Settings.h.example` → `Settings.h` and set your Duino-Coin username, WiFi, etc.
+3. Follow **`README_ESP32C3_MiniTV.md`** for Arduino IDE, libraries, and TFT_eSPI setup.
 4. Apply the files in **`patches/TFT_eSPI/`** to your local TFT_eSPI library (required on ESP32 core 3.x).
-5. Open `ESP_Code/ESP_Code.ino`, select **ESP32C3 Dev Module**, upload.
+5. Open `ESP_Code.ino`, select **ESP32C3 Dev Module**, upload.
 
 **Arduino settings that worked:** USB CDC On Boot **Enabled**, partition **Huge APP**, upload speed **115200**.
 
