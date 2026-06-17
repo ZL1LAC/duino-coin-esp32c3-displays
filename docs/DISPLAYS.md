@@ -16,7 +16,7 @@ TFT-specific notes for boards that use `DisplayHal.h`. Other future ports in thi
 | **TFT_eSPI setup** | `Setup_Spotpear_ESP32C3_144.h` | `Setup_ESP32_2424S012.h` |
 | **Setup reference** | `boards/esp32c3-minitv/ST7735_setup.h` | `boards/esp32c3-round128/GC9A01_setup.h` |
 | **README** | [esp32c3-minitv](../boards/esp32c3-minitv/) | [esp32c3-round128](../boards/esp32c3-round128/) |
-| **Init** | `tft.init(INITR_GREENTAB)` | `tft.init()` + backlight GPIO3 |
+| **Init** | `tft.init()` (BLACKTAB in User_Settings) | `tft.init()` + backlight GPIO3 |
 | **SPI pins** | SCLK=3, MOSI=4, CS=2, DC=0, RST=5 | SCLK=6, MOSI=7, CS=10, DC=2, RST=-1 |
 | **Touch** | — | CST816D I2C: SDA=4, SCL=5, INT=0, RST=1 |
 

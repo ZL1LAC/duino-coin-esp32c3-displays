@@ -113,8 +113,10 @@
   }
 
   void reset_settings() {
+    #if defined(WEB_DASHBOARD)
     server.send(200, "text/html", "Settings have been erased. Please redo the configuration by connecting to the WiFi network that will be created");
     delay(500);
+    #endif
     wifiManager.resetSettings();
     RestartESP("Manual settings reset");
   }

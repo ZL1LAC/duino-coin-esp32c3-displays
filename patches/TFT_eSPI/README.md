@@ -44,5 +44,5 @@ Also ensure `#include "soc/soc.h"` is present if `DR_REG_SPI2_BASE` is undefined
 
 | Board | Init in `DisplayHal.h` |
 |-------|-------------------------|
-| ST7735 Spotpear | `tft.init(INITR_GREENTAB)` |
+| ST7735 Spotpear | `tft.init()` (BLACKTAB in User_Setup) |
 | GC9A01 round | `tft.init()` + backlight on GPIO3 |

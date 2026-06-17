@@ -495,10 +495,10 @@
           Serial.println("LCD: tft.init()...");
           Serial.flush();
         #endif
-        // INITR_GREENTAB: colstart=2 fixes right-edge static on this 128x128 panel
-        tft.init(INITR_GREENTAB);
+        // Tab variant (BLACKTAB) comes from TFT_eSPI User_Setup — see boards/esp32c3-minitv/ST7735_setup.h
+        tft.init();
         #if defined(SERIAL_PRINTING)
-          Serial.println("LCD: init OK (GREENTAB)");
+          Serial.println("LCD: init OK");
           Serial.flush();
         #endif
         tft.setRotation(tft_rotation);
