@@ -13,6 +13,14 @@
   #include "../../ESP_Code/TDeckDisplay.h"
 #endif
 
+#if defined(HELTEC_WIFI_LORA_32_V2)
+  #include "../../ESP_Code/HeltecDisplay.h"
+#endif
+
+#if defined(DISPLAY_SSD1306)
+  #include <U8g2lib.h>
+#endif
+
 #if defined(DISPLAY_ST7735)
   #ifndef MINITV_SPI_SCLK
     #define MINITV_SPI_SCLK 3
@@ -54,6 +62,7 @@ inline void board_spi_init() {
 #endif
 }
 
+#if defined(DISPLAY_ST7789) || defined(DISPLAY_ST7735) || defined(DISPLAY_GC9A01)
 template<typename Tft>
 inline void display_init(Tft &tft, uint8_t rotation) {
   board_power_init();
@@ -75,5 +84,23 @@ inline void display_init(Tft &tft, uint8_t rotation) {
 
   Serial.printf("Display init OK — %dx%d @ rot %u\n", tft.width(), tft.height(), rotation);
 }
+#endif  // DISPLAY_ST7789 || DISPLAY_ST7735 || DISPLAY_GC9A01
+
+#if defined(DISPLAY_SSD1306)
+template<typename U8G2Type>
+inline void oled_init(U8G2Type &u8g2) {
+#if defined(HELTEC_WIFI_LORA_32_V2)
+  Serial.println("Heltec: OLED init (SW I2C 15/4)...");
+  heltec_display_init(u8g2);
+#else
+  u8g2.begin();
+  u8g2.clearBuffer();
+  u8g2.setFontMode(1);
+  u8g2.setBitmapMode(1);
+  u8g2.sendBuffer();
+#endif
+  Serial.println("Display init OK — 128x64 OLED");
+}
+#endif
 
 #endif

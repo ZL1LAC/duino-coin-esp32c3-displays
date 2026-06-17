@@ -42,6 +42,26 @@
       }
     },
     {
+      "id": "heltec-wifi-lora-32-v2",
+      "name": "Heltec WiFi LoRa 32 (V2)",
+      "mcu": "ESP32",
+      "guide": "boards/heltec-wifi-lora-32-v2/README.md",
+      "features": {
+        "display": "SSD1306",
+        "resolution": "128x64",
+        "touch": false,
+        "lora": "SX1276"
+      },
+      "firmware": {
+        "enabled": false,
+        "esptool_chip": "esp32",
+        "fqbn": "esp32:esp32:heltec_wifi_lora_32_V2:UploadSpeed=921600,PartitionScheme=huge_app",
+        "defines_enable": ["DISPLAY_SSD1306", "HELTEC_WIFI_LORA_32_V2"],
+        "defines_disable": ["DISPLAY_ST7735", "DISPLAY_GC9A01", "DISPLAY_ST7789"],
+        "esp32c3_spi_patch": false
+      }
+    },
+    {
       "id": "lilygo-t-deck",
       "name": "LilyGO T-Deck",
       "mcu": "ESP32-S3",

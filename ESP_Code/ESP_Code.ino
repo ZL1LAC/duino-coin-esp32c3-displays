@@ -63,6 +63,10 @@
   #include "DisplayHal.h"
 #endif
 
+#if defined(HELTEC_WIFI_LORA_32_V2) && defined(DISPLAY_SSD1306)
+  #include "HeltecDisplay.h"
+#endif
+
 #if defined(LILYGO_T_DECK)
 static bool tdeck_lcd_started = false;
 
@@ -574,6 +578,10 @@ void task2_func(void *) {
 void setup() {
     #if !defined(ESP8266) && defined(DISABLE_BROWNOUT)
         WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+    #endif
+
+    #if defined(HELTEC_WIFI_LORA_32_V2) && defined(DISPLAY_SSD1306)
+        heltec_board_early_init();
     #endif
 
     #if defined(SERIAL_PRINTING)

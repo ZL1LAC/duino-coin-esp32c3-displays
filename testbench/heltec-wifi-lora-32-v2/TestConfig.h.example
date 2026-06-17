@@ -1,0 +1,13 @@
+// Copy to TestConfig.h, then: .\scripts\sync-testbench-test.ps1 heltec-wifi-lora-32-v2
+
+#ifndef TEST_CONFIG_H
+#define TEST_CONFIG_H
+
+#define BOARD_NAME "Heltec WiFi LoRa 32 V2"
+
+#define SERIAL_BAUDRATE 115200
+
+#define DISPLAY_SSD1306
+#define HELTEC_WIFI_LORA_32_V2
+
+#endif

@@ -17,6 +17,7 @@ Fork base: upstream **ESP_Code 4.3** · network: [duinocoin.com](https://duinoco
 | Spotpear ESP32-C3 1.44" Mini TV | ESP32-C3 | ST7735 128×128 | [boards/esp32c3-minitv/](boards/esp32c3-minitv/) · [testbench](testbench/esp32c3-minitv/) |
 | ESP32-2424S012 round | ESP32-C3 | GC9A01 240×240, CST816D touch (C model) | [boards/esp32c3-round128/](boards/esp32c3-round128/) · [testbench](testbench/esp32c3-round128/) |
 | LilyGO T-Deck | ESP32-S3 | ST7789 320×240, keyboard + trackball — **testbench** | [boards/lilygo-t-deck/](boards/lilygo-t-deck/) · [testbench](testbench/lilygo-t-deck/) |
+| Heltec WiFi LoRa 32 (V2) | ESP32 | SSD1306 128×64 OLED + LoRa — **testbench** | [boards/heltec-wifi-lora-32-v2/](boards/heltec-wifi-lora-32-v2/) · [testbench](testbench/heltec-wifi-lora-32-v2/) |
 
 Display comparison and switching: **[docs/DISPLAYS.md](docs/DISPLAYS.md)** (ESP32-C3 TFT miners)
 
@@ -61,12 +62,14 @@ duino-coin-boards/
 │   ├── _template/      Copy via scripts/new-board.sh
 │   ├── esp32c3-minitv/
 │   ├── esp32c3-round128/
-│   └── lilygo-t-deck/
+│   ├── lilygo-t-deck/
+│   └── heltec-wifi-lora-32-v2/
 ├── docs/               Shared docs (display comparison, adding boards, flash)
 ├── testbench/          Board Settings profiles → sync into ESP_Code for local tests
 │   ├── esp32c3-minitv/
 │   ├── esp32c3-round128/
-│   └── lilygo-t-deck/
+│   ├── lilygo-t-deck/
+│   └── heltec-wifi-lora-32-v2/
 ├── scripts/            Build, new-board scaffold, registry helper
 └── patches/            Library / toolchain fixes
 ```

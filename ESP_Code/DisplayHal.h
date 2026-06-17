@@ -122,6 +122,10 @@
   #include "TDeckDisplay.h"
 #endif
 
+#if defined(HELTEC_WIFI_LORA_32_V2) && defined(DISPLAY_SSD1306)
+  #include "HeltecDisplay.h"
+#endif
+
 // ===================================================================== //
 //  ST7735 128x128 support (Spotpear ESP32-C3 1.44" "Mini TV" board)     //
 //  Uses the TFT_eSPI library. The display pins are set via TFT_eSPI's   //
@@ -462,11 +466,23 @@
       // Abstraction layer: screen initialization
 
       #if defined(DISPLAY_SSD1306)
+        #if defined(HELTEC_WIFI_LORA_32_V2)
+          #if defined(SERIAL_PRINTING)
+            Serial.println("LCD: Heltec Vext + OLED init...");
+            Serial.flush();
+          #endif
+          heltec_display_init(u8g2);
+          #if defined(SERIAL_PRINTING)
+            Serial.println("LCD: Heltec OLED init OK");
+            Serial.flush();
+          #endif
+        #else
           u8g2.begin();
           u8g2.clearBuffer();
           u8g2.setFontMode(1);
           u8g2.setBitmapMode(1);
           u8g2.sendBuffer();
+        #endif
       #endif
 
       #if defined(DISPLAY_16X2)

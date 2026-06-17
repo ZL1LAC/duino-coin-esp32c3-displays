@@ -31,8 +31,8 @@ extern const char PASSWORD[] = "your_wifi_password";
 #define SERIAL_PRINTING
 
 // Edit the line below if you wish to change the serial speed (low values may reduce performance but are less prone to interference)
-#if defined(DISPLAY_ST7735) || defined(DISPLAY_GC9A01) || defined(LILYGO_T_DECK)
-  // ESP32 USB-CDC serial is easiest to read at 115200 in the Arduino Serial Monitor
+#if defined(DISPLAY_ST7735) || defined(DISPLAY_GC9A01) || defined(LILYGO_T_DECK) || defined(HELTEC_WIFI_LORA_32_V2)
+  // USB-CDC / CP2102 serial is easiest to read at 115200 in the Arduino Serial Monitor
   #define SERIAL_BAUDRATE 115200
 #else
   #define SERIAL_BAUDRATE 500000
@@ -53,12 +53,15 @@ extern const char PASSWORD[] = "your_wifi_password";
 // ------------------------ Displays ---------------------------- //
 
 // Uncomment to enable a SSD1306 OLED screen on the I2C bus to display mining info in real time
-// Default connections (can be overriden by using a different u8g2 initializer, see line 140):
+// Default connections (can be overriden by using a different u8g2 initializer, see Settings.h):
 // GND - GND
 // VCC - 5V or 3.3V depending on display
 // SCL - GPIO22 (ESP32) or GPIO5 (D2 on ESP8266) or GPIO35 (ESP32-S2)
 // SDA - GPIO21 (ESP32) or GPIO4 (D1 on ESP8266) or GPIO33 (ESP32-S2)
 // #define DISPLAY_SSD1306
+
+// Heltec WiFi LoRa 32 (V2) — use with DISPLAY_SSD1306. See boards/heltec-wifi-lora-32-v2/
+// #define HELTEC_WIFI_LORA_32_V2
 
 // Uncomment to enable a 16x2 LCD screen on a direct bus to display mining info in real time
 // See line 150 for connections and initializer
@@ -133,15 +136,9 @@ extern const char PASSWORD[] = "your_wifi_password";
 #endif
 
 // On ESP32-C3 display boards GPIO11 (flash) / GPIO8 conflict with LED blink ? disabled below.
-#if defined(DISPLAY_ST7735)
-  #undef LED_BLINKING
-#endif
+#define LED_BLINKING
 
-#if defined(DISPLAY_GC9A01)
-  #undef LED_BLINKING
-#endif
-
-#if defined(LILYGO_T_DECK)
+#if defined(DISPLAY_ST7735) || defined(DISPLAY_GC9A01) || defined(LILYGO_T_DECK) || defined(HELTEC_WIFI_LORA_32_V2)
   #undef LED_BLINKING
 #endif
 
@@ -190,7 +187,12 @@ extern unsigned int ping = 0;
     #include <Wire.h>
     // Display definition from the U8G2 library. Edit if you use a different display
     // For software I2C, use ..._F_SW_I2C and define the pins in the initializer
-    U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+    #if defined(HELTEC_WIFI_LORA_32_V2)
+      // SW I2C — avoids Heltec variant wrong default Wire pins (21/22 vs OLED 4/15)
+      U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ 15, /* data=*/ 4, /* reset=*/ 16);
+    #else
+      U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, U8X8_PIN_NONE);
+    #endif
 #endif
 
 #if defined(DISPLAY_16X2)

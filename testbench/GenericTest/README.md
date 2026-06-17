@@ -11,7 +11,7 @@ Use this first on a new board; graduate to the full miner once the screen looks 
    ```powershell
    .\scripts\sync-testbench-test.ps1 lilygo-t-deck
    ```
-3. Install TFT_eSPI User_Setup:
+3. Install TFT_eSPI User_Setup (TFT boards only — skip for Heltec OLED):
    ```powershell
    .\scripts\setup-tft-espi.ps1 lilygo-t-deck
    ```

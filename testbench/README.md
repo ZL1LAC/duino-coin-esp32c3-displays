@@ -57,6 +57,7 @@ When mining works, set `firmware.enabled: true` in [boards/registry.json](../boa
 | ESP32-2424S012 round | — | [Settings.h.example](esp32c3-round128/Settings.h.example) | [tft_setup.h](esp32c3-round128/tft_setup.h) |
 
 | LilyGO T-Deck | [TestConfig.h.example](lilygo-t-deck/TestConfig.h.example) | [Settings.h.example](lilygo-t-deck/Settings.h.example) | [tft_setup.h](lilygo-t-deck/tft_setup.h) |
+| Heltec WiFi LoRa 32 V2 | [TestConfig.h.example](heltec-wifi-lora-32-v2/TestConfig.h.example) | [Settings.h.example](heltec-wifi-lora-32-v2/Settings.h.example) | — (U8g2 OLED, no TFT_eSPI) |
 
 
 
@@ -83,6 +84,7 @@ testbench/
 ├── esp32c3-round128/
 
 └── lilygo-t-deck/
+└── heltec-wifi-lora-32-v2/
 
 ```
 
