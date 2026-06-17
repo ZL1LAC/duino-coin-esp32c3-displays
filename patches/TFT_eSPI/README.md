@@ -21,7 +21,7 @@ Edit `User_Setup_Select.h` (comment out other setups):
 // #include <User_Setups/Setup_ESP32_2424S012.h>
 ```
 
-Reference copies also live in the repo root: `ST7735_setup.h`, `GC9A01_setup.h`.
+Reference copies also live in the repo: `boards/esp32c3-minitv/ST7735_setup.h`, `boards/esp32c3-round128/GC9A01_setup.h`.
 
 ## 2. ESP32-C3 SPI crash fix (required on core 3.x)
 

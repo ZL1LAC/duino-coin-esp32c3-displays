@@ -1,6 +1,6 @@
 // TFT_eSPI user setup for ESP32-C3 1.28" round display (ESP32-2424S012)
 // GC9A01 driver, 240x240 IPS round panel (~37 mm)
-// Mining UI matches Spotpear Mini TV — see DISPLAYS.md for board comparison
+// Mining UI matches Spotpear Mini TV — see docs/DISPLAYS.md for board comparison
 //
 // Install steps:
 // 1. Copy this file to Arduino/libraries/TFT_eSPI/User_Setups/Setup_ESP32_2424S012.h

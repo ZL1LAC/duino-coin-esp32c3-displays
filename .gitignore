@@ -1,2 +1,5 @@
-# Local miner credentials (copy Settings.h.example to Settings.h)
-Settings.h
+# Local miner credentials (copy ESP_Code/Settings.h.example to ESP_Code/Settings.h)
+ESP_Code/Settings.h
+
+# Local firmware build output
+firmware/dist/

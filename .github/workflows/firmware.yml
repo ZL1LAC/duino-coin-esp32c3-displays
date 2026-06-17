@@ -1,0 +1,64 @@
+name: Firmware
+
+on:
+  push:
+    tags:
+      - 'firmware-v*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        board:
+          - esp32c3-minitv
+          - esp32c3-round128
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install tools
+        run: |
+          pip install esptool
+          curl -fsSL https://raw.githubusercontent.com/arduino/arduino-cli/master/install.sh | sh
+          echo "$PWD/bin" >> "$GITHUB_PATH"
+
+      - name: Build ${{ matrix.board }}
+        run: |
+          chmod +x scripts/*.sh
+          bash scripts/build-firmware.sh "${{ matrix.board }}"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.board }}
+          path: |
+            firmware/dist/${{ matrix.board }}/*-merged-flash.bin
+            firmware/dist/${{ matrix.board }}/manifest.json
+            firmware/dist/${{ matrix.board }}/FLASH.txt
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/firmware-v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: firmware-*
+          merge-multiple: true
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/**/*
+          generate_release_notes: true

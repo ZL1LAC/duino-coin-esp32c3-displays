@@ -1,5 +1,5 @@
 // TFT_eSPI setup for the Spotpear ESP32-C3 1.44" "Mini TV" board (ST7735)
-// See README_ESP32C3_MiniTV.md and DISPLAYS.md
+// See boards/esp32c3-minitv/README.md and docs/DISPLAYS.md
 
 #define USER_SETUP_INFO "Spotpear_ESP32C3_144_ST7735"
 
