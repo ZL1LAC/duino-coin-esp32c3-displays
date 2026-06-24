@@ -13,7 +13,7 @@ Check **[GitHub Releases](https://github.com/ZL1LAC/duino-coin-boards/releases)*
 | LilyGO T-Deck | `lilygo-t-deck-firmware.bin` | [devices/lilygo-t-deck](../devices/lilygo-t-deck/) |
 | Heltec WiFi LoRa 32 (V2) | `heltec-wifi-lora-32-v2-firmware.bin` | [devices/heltec-wifi-lora-32-v2](../devices/heltec-wifi-lora-32-v2/) |
 | LilyGO T-Deck Pro | `lilygo-t-deck-pro-firmware.bin` | [devices/lilygo-t-deck-pro](../devices/lilygo-t-deck-pro/) |
-| LilyGO T-Beam v1.1 | `lilygo-t-beam-v11-firmware.bin` | [devices/lilygo-t-beam-v11](../devices/lilygo-t-beam-v11/) *(when enabled in registry)* |
+| LilyGO T-Beam v1.1 | `lilygo-t-beam-v11-firmware.bin` | [devices/lilygo-t-beam-v11](../devices/lilygo-t-beam-v11/) |
 
 Each release also includes per-device `*-FLASH.txt` and `*-manifest.json`.
 

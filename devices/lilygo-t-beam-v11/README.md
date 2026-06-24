@@ -112,4 +112,4 @@ The onboard **18650** cell is monitored through the **AXP192** PMU (same I²C bu
 
 ## Pre-built firmware
 
-When `firmware.enabled: true` in [registry.json](../registry.json): `lilygo-t-beam-v11-firmware.bin` on [GitHub Releases](https://github.com/ZL1LAC/duino-coin-boards/releases).
+Pre-built **`lilygo-t-beam-v11-firmware.bin`** on [GitHub Releases](https://github.com/ZL1LAC/duino-coin-boards/releases) (tag `firmware-v*`).
