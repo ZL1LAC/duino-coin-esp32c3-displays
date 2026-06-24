@@ -4,6 +4,8 @@ Board-specific guide for the **ESP32-2424S012** (GC9A01 240×240 round, optional
 
 **Project home:** [README.md](../../README.md) · **Docs:** [DISPLAYS.md](../../docs/DISPLAYS.md)
 
+> **Testbench:** active development — pre-built firmware is paused (`firmware.enabled: false` in [registry.json](../registry.json)) until new features ship. Build from source below.
+
 Mining firmware for the **ESP32-2424S012** board (ESP32-C3 + **GC9A01** 240×240 round IPS, ~37 mm).
 
 ## Quick start (no compile)
@@ -14,6 +16,19 @@ Mining firmware for the **ESP32-2424S012** board (ESP32-C3 + **GC9A01** 240×240
 
 Uses the **same mining UI as the Spotpear Mini TV** ([ST7735 128×128](../esp32c3-minitv/)), scaled for the round panel. See **[DISPLAYS.md](../../docs/DISPLAYS.md)** for a side-by-side comparison.
 
+```powershell
+# Miner (captive portal — no WiFi in Settings.h)
+.\scripts\sync-device.ps1 esp32c3-round128 miner-portal
+.\scripts\setup-tft-espi.ps1 esp32c3-round128
+# Open ESP_Code/ESP_Code.ino, upload, Serial 115200
+
+# Display-only bring-up (optional)
+.\scripts\sync-device.ps1 esp32c3-round128 test
+# Open testbench/GenericTest/GenericTest.ino
+```
+
+When features are ready for release, set `firmware.enabled: true` in [registry.json](../registry.json) and tag `firmware-v*`.
+
 ## What you need
 
 - Arduino IDE 2.x
@@ -23,11 +38,16 @@ Uses the **same mining UI as the Spotpear Mini TV** ([ST7735 128×128](../esp32c
 
 ## Arduino IDE settings
 
+> **Sketch too big / 101% of program storage?** Your **Partition Scheme** is wrong.
+> The compiler limit `1310720` bytes (~1.25 MB) means **Default** partition — not Huge APP.
+> Set **Tools → Partition Scheme → Huge APP (3MB No OTA/1MB SPIFFS)** and compile again.
+
 | Setting | Value |
 |---------|--------|
 | Board | ESP32C3 Dev Module |
 | USB CDC On Boot | **Enabled** |
-| Partition Scheme | **Huge APP (3MB No OTA/1MB SPIFFS)** |
+| Flash Size | **4MB (32Mb)** |
+| Partition Scheme | **Huge APP (3MB No OTA/1MB SPIFFS)** — sketch is ~1.3 MB with touch + captive portal |
 | Upload Speed | **115200** |
 | Serial Monitor | **115200** baud |
 
@@ -71,10 +91,16 @@ Same rows as Spotpear Mini TV (wifi, hashrate, diff, shares, IP, uptime) — ins
 
 | Action | Effect |
 |--------|--------|
-| Tap | Rotate display |
-| Swipe up / down | Brightness |
+| Tap | Rotate display; **wake** when screen is blank |
+| Double-tap | Blank screen (backlight off) |
+| Long press | Toggle backlight dim / bright |
+| Swipe up / down | Brightness ± (cyan bar overlay) |
+| Swipe left | **Stats** page (user, rig, WiFi, node, key) |
+| Swipe right | **Mining** page |
 
-**Serial debug (115200):** on boot look for `Touch: I2C 0x15 OK`. When you tap, you should see `Touch: X=… Y=…`. If you see **MISSING**, the touch chip is not on the bus (wrong board variant or wiring). If OK but no X/Y lines when tapping, touch init failed. If X/Y appear but screen does not rotate, report that.
+Brightness and rotation persist across reboot (`Preferences`).
+
+Serial debug (115200): gesture lines when active.
 
 Disable touch: comment out `#define TOUCH_CST816D` in `ESP_Code/Settings.h`.
 
@@ -91,6 +117,7 @@ Disable touch: comment out `#define TOUCH_CST816D` in `ESP_Code/Settings.h`.
 
 | Problem | Fix |
 |---------|-----|
+| **Sketch too big** / `text section exceeds available space` / max `1310720` bytes | **Tools → Partition Scheme → Huge APP (3MB No OTA/1MB SPIFFS)** |
 | Black screen | Correct TFT_eSPI setup; re-upload after library change |
 | Boot crash `MTVAL: 0x10` | Apply ESP32-C3 `REG_SPI_BASE` patch |
 | Upload fails | BOOT+RESET; 115200 baud; close Serial Monitor |

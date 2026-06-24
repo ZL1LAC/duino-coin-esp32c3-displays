@@ -1,4 +1,8 @@
 // Copy to Settings.h, then: .\scripts\sync-device.ps1 esp32c3-round128
+//
+// Arduino IDE (ESP32C3 Dev Module):
+//   USB CDC On Boot = Enabled
+//   Partition Scheme = Huge APP (3MB No OTA/1MB SPIFFS)  — required (~1.3 MB sketch)
 
 #ifndef SETTINGS_H
 #define SETTINGS_H

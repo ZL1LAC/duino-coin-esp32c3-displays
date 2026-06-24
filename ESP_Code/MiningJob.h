@@ -125,7 +125,7 @@ public:
             ctx.write((const unsigned char *)counter.c_str(), counter.strlen()).finalize(hashArray);
             
             #if defined(TOUCH_CST816D)
-                if (max_micros_elapsed(micros(), 100000)) {
+                if (max_micros_elapsed(micros(), 25000)) {
                     display_input_poll();
                     yield();
                 }

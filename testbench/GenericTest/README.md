@@ -17,6 +17,8 @@ Device config lives in **`devices/<id>/`** — sync it here before upload.
    ```
 4. Open **`GenericTest.ino`** · upload · Serial **115200**
 
+Touch boards (e.g. `esp32c3-round128`) compile `CST816D_link.cpp`, which includes the shared driver from `ESP_Code/`.
+
 See `devices/<id>/README.md` for Arduino board settings.
 
 ## After bring-up

@@ -467,24 +467,141 @@
     bool tft_layout_drawn = false;
     volatile bool tft_busy = false;
 
+    #include <Preferences.h>
+    #include <WiFi.h>
+
+    static Preferences gc9a01_prefs;
+    static uint8_t gc9a01_page = 0;
+    static bool gc9a01_screen_blank = false;
+    static uint8_t gc9a01_bl_level = 255;
+    static bool gc9a01_bl_dimmed = false;
+    static unsigned long bl_overlay_hide_ms = 0;
+
+    #define GC9A01_BL_MIN 20
+    #define GC9A01_BL_DIM  40
+    #define GC9A01_BL_STEP 35
+    #define GC9A01_PREFS_NS "gc9a01_ui"
+
+    void gc9a01_prefs_load() {
+      gc9a01_prefs.begin(GC9A01_PREFS_NS, true);
+      tft_rotation = gc9a01_prefs.getUChar("rotation", 0) % 4;
+      gc9a01_bl_level = gc9a01_prefs.getUChar("brightness", 255);
+      if (gc9a01_bl_level < GC9A01_BL_MIN) {
+        gc9a01_bl_level = GC9A01_BL_MIN;
+      }
+      gc9a01_bl_dimmed = (gc9a01_bl_level <= GC9A01_BL_DIM);
+      gc9a01_prefs.end();
+    }
+
+    void gc9a01_prefs_save() {
+      gc9a01_prefs.begin(GC9A01_PREFS_NS, false);
+      gc9a01_prefs.putUChar("rotation", tft_rotation);
+      gc9a01_prefs.putUChar("brightness", gc9a01_bl_level);
+      gc9a01_prefs.end();
+    }
+
+    static bool gc9a01_prefs_dirty = false;
+    static unsigned long gc9a01_prefs_save_at = 0;
+
+    void gc9a01_prefs_request_save() {
+      gc9a01_prefs_dirty = true;
+      gc9a01_prefs_save_at = millis() + 1500;
+    }
+
+    void gc9a01_prefs_flush_if_due() {
+      if (gc9a01_prefs_dirty && (long)(millis() - gc9a01_prefs_save_at) >= 0) {
+        gc9a01_prefs_save();
+        gc9a01_prefs_dirty = false;
+      }
+    }
+
+    void gc9a01_apply_brightness() {
+      if (!gc9a01_screen_blank) {
+        analogWrite(TFT_BL, gc9a01_bl_level);
+      }
+      bl_overlay_hide_ms = millis() + 1500;
+      gc9a01_prefs_request_save();
+    }
+
+    void gc9a01_draw_brightness_overlay() {
+      if (gc9a01_screen_blank) return;
+      if ((long)(bl_overlay_hide_ms - millis()) <= 0) return;
+
+      const int barH = 56;
+      const int x = GC9A01_MX + GC9A01_W - 10;
+      const int y = 120 - barH / 2;
+      tft.drawRoundRect(x - 1, y - 1, 10, barH + 2, 2, DUCO_GRAY);
+      tft.fillRect(x, y, 8, barH, DUCO_DARK);
+      int fillH = (gc9a01_bl_level * (barH - 4)) / 255;
+      if (fillH > 0) {
+        tft.fillRect(x + 2, y + barH - 2 - fillH, 4, fillH, DUCO_CYAN);
+      }
+    }
+
+    void gc9a01_draw_page_dots() {
+      if (gc9a01_screen_blank) return;
+      const int y = GC9A01_SY(124);
+      tft.fillCircle(114, y, 2, gc9a01_page == 0 ? DUCO_CYAN : DUCO_DARK);
+      tft.fillCircle(126, y, 2, gc9a01_page == 1 ? DUCO_CYAN : DUCO_DARK);
+    }
+
+    String gc9a01_fit(String s, uint8_t maxChars) {
+      if ((int)s.length() <= maxChars) return s;
+      if (maxChars < 2) return s.substring(0, maxChars);
+      return s.substring(0, maxChars - 1) + "~";
+    }
+
+    String gc9a01_mask_key(const char *key) {
+      if (key == nullptr || strcmp(key, "None") == 0) {
+        return "None";
+      }
+      String s = String(key);
+      if ((int)s.length() <= 2) {
+        return "**";
+      }
+      return s.substring(0, 2) + "***";
+    }
+
+    void gc9a01_stats_row(int row, const char *tag, String value) {
+      tft.setTextColor(DUCO_GRAY, BLACK);
+      tft.setCursor(GC9A01_SX(4), GC9A01_SY(row));
+      tft.print(tag);
+      tft.setTextColor(WHITE, BLACK);
+      tft.setCursor(GC9A01_SX(4), GC9A01_SY(row + 10));
+      tft.print(gc9a01_fit(value, 20));
+    }
+
+    void gc9a01_draw_stats_page(String node) {
+      tft.fillRect(GC9A01_MX, GC9A01_MY, GC9A01_W, GC9A01_SY(127) - GC9A01_MY, BLACK);
+
+      tft.setTextColor(DUCO_GOLD, BLACK);
+      tft.setTextSize(1);
+      tft.setCursor(GC9A01_SX(4), GC9A01_SY(6));
+      tft.print("Device");
+
+      gc9a01_stats_row(20, "user", String(DUCO_USER));
+      gc9a01_stats_row(40, "rig", String(RIG_IDENTIFIER));
+      gc9a01_stats_row(60, "wifi", WiFi.isConnected() ? WiFi.SSID() : String("--"));
+      gc9a01_stats_row(80, "fw", String(SOFTWARE_VERSION));
+      gc9a01_stats_row(100, "node", node);
+
+      tft.setTextColor(DUCO_GRAY, BLACK);
+      tft.setCursor(GC9A01_SX(4), GC9A01_SY(118));
+      tft.print(String(getCpuFrequencyMhz()) + " MHz  key " + gc9a01_mask_key(MINER_KEY));
+    }
+
     void IRAM_ATTR buttonISR() {
       tft_rotation_changed = true;
     }
 
-    void checkButton() {
-      if (tft_rotation_changed) {
-        tft_rotation_changed = false;
-        tft_rotation = (tft_rotation + 1) % 4;
-        tft.setRotation(tft_rotation);
-        tft_layout_drawn = false;
-      }
-    }
+    void gc9a01_repaint_from_cache();  // defined after draw helpers below
 
 #if defined(TOUCH_CST816D)
     static bool touch_was_down = false;
     static unsigned long last_touch_action_ms = 0;
-    static uint8_t gc9a01_bl_level = 255;
+    static unsigned long touch_dbg_ms = 0;
     static bool touch_present = false;
+    static uint8_t touch_gesture_done = None;
     volatile bool touch_irq_pending = false;
 
     void IRAM_ATTR touchISR() {
@@ -505,17 +622,13 @@
         Serial.print("Touch: I2C 0x15 ");
         Serial.println(touch_present ? "OK" : "MISSING");
         if (touch_present) {
-          uint16_t x = 0, y = 0;
-          uint8_t g = None;
-          if (touch.getTouch(&x, &y, &g)) {
-            Serial.printf("Touch: finger at boot X=%u Y=%u\n", x, y);
-          } else {
-            Serial.println("Touch: ready (tap screen to test)");
-          }
+          Serial.println("Touch: tap=rotate  dbl=blank  long=dim  swipe=bright/page");
         }
         Serial.flush();
       #endif
     }
+
+    #define TOUCH_GESTURE_GAP_MS 120
 
     void checkTouch() {
       if (!touch_present) return;
@@ -531,35 +644,67 @@
       uint16_t x = 0, y = 0;
       uint8_t gesture = None;
       bool down = touch.getTouch(&x, &y, &gesture);
+      bool ui_changed = false;
 
       #if defined(SERIAL_PRINTING)
-        static unsigned long last_dbg = 0;
-        if (down && millis() - last_dbg > 300) {
+        if (gesture != None && gesture != touch_gesture_done && millis() - touch_dbg_ms > 200) {
           Serial.printf("Touch: X=%u Y=%u gesture=%u\n", x, y, gesture);
-          last_dbg = millis();
+          touch_dbg_ms = millis();
         }
       #endif
 
-      if (down && (gesture == SlideUp || gesture == SlideDown)) {
-        if (millis() - last_touch_action_ms > 250) {
-          last_touch_action_ms = millis();
-          if (gesture == SlideUp) {
-            gc9a01_bl_level = min(255, (int)gc9a01_bl_level + 35);
-          } else {
-            gc9a01_bl_level = max(20, (int)gc9a01_bl_level - 35);
+      if (gesture == None) {
+        touch_gesture_done = None;
+      } else if (gesture != touch_gesture_done && millis() - last_touch_action_ms > TOUCH_GESTURE_GAP_MS) {
+        touch_gesture_done = gesture;
+        last_touch_action_ms = millis();
+
+        if (gc9a01_screen_blank) {
+          if (gesture == SingleTap) {
+            gc9a01_screen_blank = false;
+            analogWrite(TFT_BL, gc9a01_bl_level);
+            tft_layout_drawn = false;
+            ui_changed = true;
           }
-          analogWrite(TFT_BL, gc9a01_bl_level);
+        } else if (gesture == DoubleTap) {
+          gc9a01_screen_blank = true;
+          analogWrite(TFT_BL, 0);
+          ui_changed = true;
+        } else if (gesture == SlideUp || gesture == SlideDown) {
+          if (gesture == SlideUp) {
+            gc9a01_bl_level = min(255, (int)gc9a01_bl_level + GC9A01_BL_STEP);
+          } else {
+            gc9a01_bl_level = max(GC9A01_BL_MIN, (int)gc9a01_bl_level - GC9A01_BL_STEP);
+          }
+          gc9a01_bl_dimmed = (gc9a01_bl_level <= GC9A01_BL_DIM);
+          gc9a01_apply_brightness();
+          ui_changed = true;
+        } else if (gesture == LongPress) {
+          gc9a01_bl_dimmed = !gc9a01_bl_dimmed;
+          gc9a01_bl_level = gc9a01_bl_dimmed ? GC9A01_BL_DIM : 255;
+          gc9a01_apply_brightness();
+          ui_changed = true;
+        } else if (gesture == SlideLeft) {
+          gc9a01_page = 1;
+          tft_layout_drawn = false;
+          ui_changed = true;
+        } else if (gesture == SlideRight) {
+          gc9a01_page = 0;
+          tft_layout_drawn = false;
+          ui_changed = true;
+        } else if (gesture == SingleTap) {
+          tft_rotation = (tft_rotation + 1) % 4;
+          tft.setRotation(tft_rotation);
+          tft_layout_drawn = false;
+          gc9a01_prefs_request_save();
+          ui_changed = true;
         }
-        touch_was_down = down;
-        return;
       }
 
-      if (down && !touch_was_down) {
-        if (millis() - last_touch_action_ms > 350) {
-          last_touch_action_ms = millis();
-          tft_rotation_changed = true;
-        }
+      if (ui_changed && !tft_busy) {
+        gc9a01_repaint_from_cache();
       }
+
       touch_was_down = down;
     }
 #else
@@ -569,12 +714,6 @@
 
     void gc9a01_clear_screen() {
       tft.fillScreen(BLACK);
-    }
-
-    String gc9a01_fit(String s, uint8_t maxChars) {
-      if ((int)s.length() <= maxChars) return s;
-      if (maxChars < 2) return s.substring(0, maxChars);
-      return s.substring(0, maxChars - 1) + "~";
     }
 
     String gc9a01_pct(String rate) {
@@ -619,6 +758,141 @@
       tft.setCursor(GC9A01_SX(70), GC9A01_SY(86));
       tft.print("sh/s");
       tft_layout_drawn = true;
+    }
+
+    struct Gc9a01Frame {
+      bool valid = false;
+      String hashrate;
+      String accepted_shares;
+      String total_shares;
+      String uptime;
+      String node;
+      String difficulty;
+      String sharerate;
+      String ping;
+      String accept_rate;
+    };
+    static Gc9a01Frame gc9a01_frame;
+
+    void gc9a01_store_frame(String hashrate, String accepted_shares, String total_shares,
+                            String uptime, String node, String difficulty, String sharerate,
+                            String ping, String accept_rate) {
+      gc9a01_frame.hashrate = hashrate;
+      gc9a01_frame.accepted_shares = accepted_shares;
+      gc9a01_frame.total_shares = total_shares;
+      gc9a01_frame.uptime = uptime;
+      gc9a01_frame.node = node;
+      gc9a01_frame.difficulty = difficulty;
+      gc9a01_frame.sharerate = sharerate;
+      gc9a01_frame.ping = ping;
+      gc9a01_frame.accept_rate = accept_rate;
+      gc9a01_frame.valid = true;
+    }
+
+    void gc9a01_repaint_from_cache() {
+      if (!gc9a01_frame.valid) return;
+
+      if (gc9a01_screen_blank) {
+        tft.fillScreen(BLACK);
+        return;
+      }
+
+      if (gc9a01_page == 1) {
+        gc9a01_draw_stats_page(gc9a01_frame.node);
+        gc9a01_draw_page_dots();
+        gc9a01_draw_brightness_overlay();
+        return;
+      }
+
+      if (!tft_layout_drawn) drawStaticLayout();
+
+      float hr = gc9a01_frame.hashrate.toFloat();
+
+      tft.fillRect(GC9A01_MX, GC9A01_MY, GC9A01_W, GC9A01_SY(25) - GC9A01_MY, BLACK);
+      drawWifiBars(GC9A01_MX, GC9A01_SY(10));
+      tft.setTextColor(WHITE, BLACK);
+      tft.setTextSize(1);
+      tft.setCursor(GC9A01_SX(20), GC9A01_SY(13));
+      tft.print(gc9a01_fit(gc9a01_frame.ping + "ms", 5));
+      tft.setTextColor(DUCO_GRAY, BLACK);
+      tft.setCursor(GC9A01_SX(50), GC9A01_SY(13));
+      tft.print(gc9a01_fit(gc9a01_frame.node, 10));
+
+      tft.fillRect(GC9A01_MX, GC9A01_SY(26), GC9A01_W, GC9A01_SY(65) - GC9A01_SY(26), BLACK);
+      tft.setTextColor(DUCO_GREEN, BLACK);
+      if (hr < 10.0) {
+        tft.setTextSize(4);
+        tft.setCursor(GC9A01_SX(6), GC9A01_SY(30));
+      } else if (hr < 100.0) {
+        tft.setTextSize(3);
+        tft.setCursor(GC9A01_SX(6), GC9A01_SY(35));
+      } else {
+        tft.setTextSize(2);
+        tft.setCursor(GC9A01_SX(6), GC9A01_SY(38));
+      }
+      tft.print(gc9a01_frame.hashrate);
+      tft.setTextColor(DUCO_GRAY, BLACK);
+      tft.setTextSize(1);
+      tft.setCursor(GC9A01_SX(94), GC9A01_SY(54));
+      tft.print("kH/s");
+
+      tft.fillRect(GC9A01_MX, GC9A01_SY(67), GC9A01_W, GC9A01_SY(95) - GC9A01_SY(67), BLACK);
+      tft.setTextColor(WHITE, BLACK);
+      tft.setTextSize(1);
+      tft.setCursor(GC9A01_SX(2), GC9A01_SY(74));
+      tft.print(gc9a01_fit(gc9a01_frame.difficulty, 8));
+      tft.setCursor(GC9A01_SX(2), GC9A01_SY(86));
+      tft.print(gc9a01_fit(gc9a01_frame.sharerate, 8));
+      tft.setTextColor(DUCO_GRAY, BLACK);
+      tft.setCursor(GC9A01_SX(70), GC9A01_SY(74));
+      tft.print("diff");
+      tft.setCursor(GC9A01_SX(70), GC9A01_SY(86));
+      tft.print("sh/s");
+
+      tft.fillRect(GC9A01_MX, GC9A01_SY(97), GC9A01_W, GC9A01_SY(115) - GC9A01_SY(97), BLACK);
+      drawCheckmark(GC9A01_SX(1), GC9A01_SY(101));
+      tft.setTextColor(WHITE, BLACK);
+      tft.setTextSize(1);
+      tft.setCursor(GC9A01_SX(14), GC9A01_SY(103));
+      tft.print(gc9a01_fit(gc9a01_frame.accepted_shares + "/" + gc9a01_frame.total_shares, 9));
+      tft.setTextColor(DUCO_CYAN, BLACK);
+      tft.setCursor(GC9A01_SX(84), GC9A01_SY(103));
+      tft.print(gc9a01_fit(gc9a01_pct(gc9a01_frame.accept_rate), 6));
+
+      tft.fillRect(GC9A01_MX, GC9A01_SY(117), GC9A01_W, GC9A01_SY(127) - GC9A01_SY(117) + 8, BLACK);
+      tft.setTextSize(1);
+      tft.setTextColor(DUCO_GRAY, BLACK);
+      tft.setCursor(GC9A01_SX(2), GC9A01_SY(119));
+      tft.print(gc9a01_fit(WiFi.localIP().toString(), 15));
+      tft.setTextColor(WHITE, BLACK);
+      gc9a01_print_right(gc9a01_fit(gc9a01_frame.uptime, 9), GC9A01_SY(119));
+
+      tft.fillRect(GC9A01_MX, GC9A01_SY(25),  GC9A01_W, 1, DUCO_DARK);
+      tft.fillRect(GC9A01_MX, GC9A01_SY(66),  GC9A01_W, 1, DUCO_DARK);
+      tft.fillRect(GC9A01_MX, GC9A01_SY(96),  GC9A01_W, 1, DUCO_DARK);
+      tft.fillRect(GC9A01_MX, GC9A01_SY(116), GC9A01_W, 1, DUCO_DARK);
+
+      gc9a01_draw_page_dots();
+      gc9a01_draw_brightness_overlay();
+    }
+
+    void checkButton() {
+      if (!tft_rotation_changed) return;
+      tft_rotation_changed = false;
+
+      if (gc9a01_screen_blank) {
+        gc9a01_screen_blank = false;
+        analogWrite(TFT_BL, gc9a01_bl_level);
+        tft_layout_drawn = false;
+        if (!tft_busy) gc9a01_repaint_from_cache();
+        return;
+      }
+
+      tft_rotation = (tft_rotation + 1) % 4;
+      tft.setRotation(tft_rotation);
+      tft_layout_drawn = false;
+      gc9a01_prefs_request_save();
+      if (!tft_busy) gc9a01_repaint_from_cache();
     }
 #endif
 
@@ -778,11 +1052,12 @@
           Serial.println("LCD: init OK");
           Serial.flush();
         #endif
+        gc9a01_prefs_load();
         tft.setRotation(tft_rotation);
+        pinMode(TFT_BL, OUTPUT);
+        analogWrite(TFT_BL, gc9a01_bl_level);
         gc9a01_clear_screen();
         touch_setup_gc9a01();
-        pinMode(TFT_BL, OUTPUT);
-        digitalWrite(TFT_BL, HIGH);
         pinMode(TFT_BUTTON_PIN, INPUT_PULLUP);
         attachInterrupt(digitalPinToInterrupt(TFT_BUTTON_PIN), buttonISR, FALLING);
       #endif
@@ -1407,73 +1682,9 @@
 
           checkTouch();
           checkButton();
-          if (!tft_layout_drawn) drawStaticLayout();
-
-          float hr = hashrate.toFloat();
-
-          tft.fillRect(GC9A01_MX, GC9A01_MY, GC9A01_W, GC9A01_SY(25) - GC9A01_MY, BLACK);
-          drawWifiBars(GC9A01_MX, GC9A01_SY(10));
-          tft.setTextColor(WHITE, BLACK);
-          tft.setTextSize(1);
-          tft.setCursor(GC9A01_SX(20), GC9A01_SY(13));
-          tft.print(gc9a01_fit(ping + "ms", 5));
-          tft.setTextColor(DUCO_GRAY, BLACK);
-          tft.setCursor(GC9A01_SX(50), GC9A01_SY(13));
-          tft.print(gc9a01_fit(node, 10));
-
-          tft.fillRect(GC9A01_MX, GC9A01_SY(26), GC9A01_W, GC9A01_SY(65) - GC9A01_SY(26), BLACK);
-          tft.setTextColor(DUCO_GREEN, BLACK);
-          if (hr < 10.0) {
-            tft.setTextSize(4);
-            tft.setCursor(GC9A01_SX(6), GC9A01_SY(30));
-          } else if (hr < 100.0) {
-            tft.setTextSize(3);
-            tft.setCursor(GC9A01_SX(6), GC9A01_SY(35));
-          } else {
-            tft.setTextSize(2);
-            tft.setCursor(GC9A01_SX(6), GC9A01_SY(38));
-          }
-          tft.print(hashrate);
-          tft.setTextColor(DUCO_GRAY, BLACK);
-          tft.setTextSize(1);
-          tft.setCursor(GC9A01_SX(94), GC9A01_SY(54));
-          tft.print("kH/s");
-
-          tft.fillRect(GC9A01_MX, GC9A01_SY(67), GC9A01_W, GC9A01_SY(95) - GC9A01_SY(67), BLACK);
-          tft.setTextColor(WHITE, BLACK);
-          tft.setTextSize(1);
-          tft.setCursor(GC9A01_SX(2), GC9A01_SY(74));
-          tft.print(gc9a01_fit(difficulty, 8));
-          tft.setCursor(GC9A01_SX(2), GC9A01_SY(86));
-          tft.print(gc9a01_fit(sharerate, 8));
-          tft.setTextColor(DUCO_GRAY, BLACK);
-          tft.setCursor(GC9A01_SX(70), GC9A01_SY(74));
-          tft.print("diff");
-          tft.setCursor(GC9A01_SX(70), GC9A01_SY(86));
-          tft.print("sh/s");
-
-          tft.fillRect(GC9A01_MX, GC9A01_SY(97), GC9A01_W, GC9A01_SY(115) - GC9A01_SY(97), BLACK);
-          drawCheckmark(GC9A01_SX(1), GC9A01_SY(101));
-          tft.setTextColor(WHITE, BLACK);
-          tft.setTextSize(1);
-          tft.setCursor(GC9A01_SX(14), GC9A01_SY(103));
-          tft.print(gc9a01_fit(accepted_shares + "/" + total_shares, 9));
-          tft.setTextColor(DUCO_CYAN, BLACK);
-          tft.setCursor(GC9A01_SX(84), GC9A01_SY(103));
-          tft.print(gc9a01_fit(gc9a01_pct(accept_rate), 6));
-
-          tft.fillRect(GC9A01_MX, GC9A01_SY(117), GC9A01_W, GC9A01_SY(127) - GC9A01_SY(117) + 8, BLACK);
-          tft.setTextSize(1);
-          tft.setTextColor(DUCO_GRAY, BLACK);
-          tft.setCursor(GC9A01_SX(2), GC9A01_SY(119));
-          tft.print(gc9a01_fit(WiFi.localIP().toString(), 15));
-          tft.setTextColor(WHITE, BLACK);
-          gc9a01_print_right(gc9a01_fit(uptime, 9), GC9A01_SY(119));
-
-          tft.fillRect(GC9A01_MX, GC9A01_SY(25),  GC9A01_W, 1, DUCO_DARK);
-          tft.fillRect(GC9A01_MX, GC9A01_SY(66),  GC9A01_W, 1, DUCO_DARK);
-          tft.fillRect(GC9A01_MX, GC9A01_SY(96),  GC9A01_W, 1, DUCO_DARK);
-          tft.fillRect(GC9A01_MX, GC9A01_SY(116), GC9A01_W, 1, DUCO_DARK);
+          gc9a01_store_frame(hashrate, accepted_shares, total_shares, uptime, node,
+                             difficulty, sharerate, ping, accept_rate);
+          gc9a01_repaint_from_cache();
 
           tft_busy = false;
       #endif
@@ -1740,6 +1951,9 @@
     void display_input_poll() {
       #if defined(TOUCH_CST816D)
         checkTouch();
+      #endif
+      #if defined(DISPLAY_GC9A01)
+        gc9a01_prefs_flush_if_due();
       #endif
       #if defined(DISPLAY_ST7789) || defined(DISPLAY_GDEQ031T10) || defined(DISPLAY_ST7735) || defined(DISPLAY_GC9A01)
         checkButton();

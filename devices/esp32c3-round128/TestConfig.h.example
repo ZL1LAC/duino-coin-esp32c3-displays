@@ -8,6 +8,7 @@
 #define SERIAL_BAUDRATE 115200
 
 #define DISPLAY_GC9A01
+#define TOUCH_CST816D
 
 #ifndef TFT_ROTATION
   #define TFT_ROTATION 0

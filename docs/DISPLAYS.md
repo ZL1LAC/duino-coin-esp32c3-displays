@@ -47,9 +47,14 @@ Driver is the **factory CST816D** code (`ESP_Code/CST816D.cpp` / `CST816D.h`) fr
 
 | Gesture | Action |
 |---------|--------|
-| Tap | Cycle screen rotation (same as BOOT button) |
-| Long press | Toggle backlight bright / dim |
-| Swipe up / down | Brightness up / down |
+| Tap | Cycle screen rotation (same as BOOT button); **wake** when screen is blank |
+| Double-tap | Blank screen (backlight off, mining continues) |
+| Long press | Toggle backlight dim / bright |
+| Swipe up / down | Brightness up / down (cyan bar overlay) |
+| Swipe left | Stats screen (user, rig, WiFi, firmware, node) |
+| Swipe right | Mining screen |
+
+Brightness and rotation are saved in flash (`Preferences`) and restored on reboot.
 
 Comment out `#define TOUCH_CST816D` in `Settings.h` to disable touch support.
 

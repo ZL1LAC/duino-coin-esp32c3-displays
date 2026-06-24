@@ -10,8 +10,10 @@ CST816D::CST816D(int8_t sda_pin, int8_t scl_pin, int8_t rst_pin, int8_t int_pin)
 void CST816D::begin(void) {
     if (_sda != -1 && _scl != -1) {
         Wire.begin(_sda, _scl);
+        Wire.setClock(400000);
     } else {
         Wire.begin();
+        Wire.setClock(400000);
     }
 
     // Factory demo pulses INT low briefly (not INPUT_PULLUP)
@@ -42,9 +44,6 @@ bool CST816D::getTouch(uint16_t *x, uint16_t *y, uint8_t *gesture) {
     bool fingerDown = (bool)i2c_read(0x02);
 
     *gesture = i2c_read(0x01);
-    if (!(*gesture == SlideUp || *gesture == SlideDown)) {
-        *gesture = None;
-    }
 
     uint8_t data[4];
     i2c_read_continuous(0x03, data, 4);

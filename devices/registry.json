@@ -42,7 +42,7 @@
         "touch": "CST816D"
       },
       "firmware": {
-        "enabled": true,
+        "enabled": false,
         "esptool_chip": "esp32c3",
         "flash_size": "4MB",
         "fqbn": "esp32:esp32:esp32c3:UploadSpeed=115200,CDCOnBoot=cdc,PartitionScheme=huge_app",

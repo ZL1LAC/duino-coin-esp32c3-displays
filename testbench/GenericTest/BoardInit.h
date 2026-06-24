@@ -54,6 +54,22 @@
   #endif
 #endif
 
+#if defined(TOUCH_CST816D)
+  #include "../../ESP_Code/CST816D.h"
+  #ifndef ROUND_TOUCH_SDA
+    #define ROUND_TOUCH_SDA 4
+  #endif
+  #ifndef ROUND_TOUCH_SCL
+    #define ROUND_TOUCH_SCL 5
+  #endif
+  #ifndef ROUND_TOUCH_RST
+    #define ROUND_TOUCH_RST 1
+  #endif
+  #ifndef ROUND_TOUCH_INT
+    #define ROUND_TOUCH_INT 0
+  #endif
+#endif
+
 inline void board_power_init() {
 #if defined(LILYGO_T_DECK)
   Serial.println("T-Deck: power + CS (via tdeck_display_init)");
@@ -69,10 +85,29 @@ inline void board_spi_init() {
 #elif defined(DISPLAY_GC9A01)
   SPI.begin(ROUND_SPI_SCLK, -1, ROUND_SPI_MOSI, -1);
   pinMode(ROUND_TFT_BL, OUTPUT);
-  digitalWrite(ROUND_TFT_BL, HIGH);
+  analogWrite(ROUND_TFT_BL, 255);
   Serial.println("Round GC9A01: SPI 6/7");
 #endif
 }
+
+#if defined(TOUCH_CST816D)
+inline bool touch_i2c_probe() {
+  Wire.beginTransmission(I2C_ADDR_CST816D);
+  return Wire.endTransmission() == 0;
+}
+
+inline void touch_init(CST816D &touch) {
+  touch.begin();
+  pinMode(ROUND_TOUCH_INT, INPUT);
+  Serial.print("Touch: I2C 0x15 ");
+  Serial.println(touch_i2c_probe() ? "OK" : "MISSING");
+  Serial.println("Touch test: tap / long-press / swipe up-down");
+}
+
+inline bool touch_poll(CST816D &touch, uint16_t *x, uint16_t *y, uint8_t *gesture) {
+  return touch.getTouch(x, y, gesture);
+}
+#endif
 
 #if defined(DISPLAY_ST7789) || defined(DISPLAY_ST7735) || defined(DISPLAY_GC9A01)
 template<typename Tft>
