@@ -71,7 +71,7 @@ Then open **`ESP_Code/ESP_Code.ino`** and upload.
 | Upload Speed | 921600 (or 115200 if upload fails) |
 | Serial Monitor | **115200** |
 
-**CI / arduino-cli FQBN:** `esp32:esp32:ttgo-t-beam:UploadSpeed=921600`
+**CI / arduino-cli FQBN:** `esp32:esp32:t-beam:UploadSpeed=921600`
 
 ---
 

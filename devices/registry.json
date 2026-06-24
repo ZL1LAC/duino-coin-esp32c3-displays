@@ -167,7 +167,7 @@
         "enabled": true,
         "esptool_chip": "esp32",
         "flash_size": "4MB",
-        "fqbn": "esp32:esp32:ttgo-t-beam:UploadSpeed=921600",
+        "fqbn": "esp32:esp32:t-beam:UploadSpeed=921600",
         "defines_enable": ["DISPLAY_SSD1306", "LILYGO_T_BEAM_V11"],
         "defines_disable": [
           "DISPLAY_ST7735",
